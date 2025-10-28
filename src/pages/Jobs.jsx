@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { db } from '@/lib/db';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -7,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Plus, Search, Archive, Briefcase } from 'lucide-react';
 
 export default function Jobs() {
+  const navigate = useNavigate();
   const [jobs, setJobs] = useState([]);
   const [search, setSearch] = useState('');
   const [statusFilter, setStatusFilter] = useState('all');
@@ -92,7 +94,11 @@ export default function Jobs() {
           ) : (
             <div className="grid gap-4">
               {jobs.map((job) => (
-                <Card key={job.id} className="hover:shadow-md transition-shadow">
+                <Card 
+                  key={job.id} 
+                  className="hover:shadow-md transition-shadow cursor-pointer"
+                  onClick={() => navigate(`/jobs/${job.id}`)}
+                >
                   <CardContent className="pt-6">
                     <div className="flex items-start justify-between">
                       <div className="flex-1">
@@ -114,11 +120,12 @@ export default function Jobs() {
                         </div>
                       </div>
                       <div className="flex gap-2">
-                        <Button variant="outline" size="sm">
-                          Edit
-                        </Button>
-                        <Button variant="ghost" size="sm">
-                          <Archive className="h-4 w-4" />
+                        <Button 
+                          variant="outline" 
+                          size="sm"
+                          onClick={() => navigate(`/jobs/${job.id}`)}
+                        >
+                          View Details
                         </Button>
                       </div>
                     </div>

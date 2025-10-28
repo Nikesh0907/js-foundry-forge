@@ -7,7 +7,9 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AppLayout } from "./components/layout/AppLayout";
 import Dashboard from "./pages/Dashboard";
 import Jobs from "./pages/Jobs";
+import JobDetail from "./pages/JobDetail";
 import Candidates from "./pages/Candidates";
+import CandidateDetail from "./pages/CandidateDetail";
 import Assessments from "./pages/Assessments";
 import NotFound from "./pages/NotFound";
 import { seedDatabase } from "./lib/db/seed";
@@ -37,7 +39,9 @@ const App = () => {
             <Route element={<AppLayout />}>
               <Route path="/" element={<Dashboard />} />
               <Route path="/jobs" element={<Jobs />} />
+              <Route path="/jobs/:jobId" element={<JobDetail />} />
               <Route path="/candidates" element={<Candidates />} />
+              <Route path="/candidates/:id" element={<CandidateDetail />} />
               <Route path="/assessments" element={<Assessments />} />
             </Route>
             {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

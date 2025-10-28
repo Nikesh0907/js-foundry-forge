@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { db } from '@/lib/db';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -6,6 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Search, Mail, Phone, Users as UsersIcon } from 'lucide-react';
 
 export default function Candidates() {
+  const navigate = useNavigate();
   const [candidates, setCandidates] = useState([]);
   const [search, setSearch] = useState('');
 
@@ -69,7 +71,11 @@ export default function Candidates() {
           ) : (
             <div className="grid gap-3">
               {candidates.map((candidate) => (
-                <Card key={candidate.id} className="hover:shadow-md transition-shadow">
+                <Card 
+                  key={candidate.id} 
+                  className="hover:shadow-md transition-shadow cursor-pointer"
+                  onClick={() => navigate(`/candidates/${candidate.id}`)}
+                >
                   <CardContent className="pt-4">
                     <div className="flex items-center justify-between">
                       <div className="flex-1">
