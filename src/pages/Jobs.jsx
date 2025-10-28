@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { db } from '@/lib/db';
-import { Job } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -8,9 +7,9 @@ import { Input } from '@/components/ui/input';
 import { Plus, Search, Archive, Briefcase } from 'lucide-react';
 
 export default function Jobs() {
-  const [jobs, setJobs] = useState<Job[]>([]);
+  const [jobs, setJobs] = useState([]);
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'all' | 'active' | 'archived'>('all');
+  const [statusFilter, setStatusFilter] = useState('all');
 
   useEffect(() => {
     loadJobs();
@@ -35,7 +34,7 @@ export default function Jobs() {
     setJobs(results);
   }
 
-  const getStatusColor = (status: string) => {
+  const getStatusColor = (status) => {
     return status === 'active' ? 'bg-success/10 text-success' : 'bg-muted text-muted-foreground';
   };
 
@@ -67,7 +66,7 @@ export default function Jobs() {
               />
             </div>
             <div className="flex gap-2">
-              {(['all', 'active', 'archived'] as const).map((status) => (
+              {['all', 'active', 'archived'].map((status) => (
                 <Button
                   key={status}
                   variant={statusFilter === status ? 'default' : 'outline'}

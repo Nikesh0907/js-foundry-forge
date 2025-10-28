@@ -1,5 +1,4 @@
 import { db } from './index';
-import { Job, Candidate, CandidateStage } from '@/types';
 
 const JOB_TITLES = [
   'Senior Frontend Engineer',
@@ -35,9 +34,9 @@ const LAST_NAMES = [
   'Rodriguez', 'Martinez', 'Hernandez', 'Lopez', 'Gonzalez', 'Wilson', 'Anderson', 'Thomas'
 ];
 
-const STAGES: CandidateStage[] = ['applied', 'screen', 'tech', 'offer', 'hired', 'rejected'];
+const STAGES = ['applied', 'screen', 'tech', 'offer', 'hired', 'rejected'];
 
-function generateSlug(title: string): string {
+function generateSlug(title) {
   return title.toLowerCase().replace(/[^a-z0-9]+/g, '-');
 }
 
@@ -52,10 +51,10 @@ export async function seedDatabase() {
   console.log('Seeding database...');
 
   // Seed Jobs
-  const jobs: Job[] = [];
+  const jobs = [];
   for (let i = 0; i < 25; i++) {
     const title = JOB_TITLES[i % JOB_TITLES.length] + (i >= JOB_TITLES.length ? ` ${Math.floor(i / JOB_TITLES.length) + 1}` : '');
-    const job: Job = {
+    const job = {
       id: `job-${i + 1}`,
       title,
       slug: generateSlug(title) + (i >= JOB_TITLES.length ? `-${Math.floor(i / JOB_TITLES.length) + 1}` : ''),
@@ -73,11 +72,11 @@ export async function seedDatabase() {
   await db.jobs.bulkAdd(jobs);
 
   // Seed Candidates
-  const candidates: Candidate[] = [];
+  const candidates = [];
   for (let i = 0; i < 1000; i++) {
     const firstName = FIRST_NAMES[Math.floor(Math.random() * FIRST_NAMES.length)];
     const lastName = LAST_NAMES[Math.floor(Math.random() * LAST_NAMES.length)];
-    const candidate: Candidate = {
+    const candidate = {
       id: `candidate-${i + 1}`,
       name: `${firstName} ${lastName}`,
       email: `${firstName.toLowerCase()}.${lastName.toLowerCase()}${i}@example.com`,

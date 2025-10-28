@@ -1,13 +1,12 @@
 import { useEffect, useState } from 'react';
 import { db } from '@/lib/db';
-import { Candidate } from '@/types';
 import { Card, CardContent, CardHeader } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Badge } from '@/components/ui/badge';
 import { Search, Mail, Phone, Users as UsersIcon } from 'lucide-react';
 
 export default function Candidates() {
-  const [candidates, setCandidates] = useState<Candidate[]>([]);
+  const [candidates, setCandidates] = useState([]);
   const [search, setSearch] = useState('');
 
   useEffect(() => {
@@ -28,8 +27,8 @@ export default function Candidates() {
     setCandidates(results.slice(0, 100));
   }
 
-  const getStageColor = (stage: string) => {
-    const colors: Record<string, string> = {
+  const getStageColor = (stage) => {
+    const colors = {
       applied: 'bg-blue-500/10 text-blue-500',
       screen: 'bg-purple-500/10 text-purple-500',
       tech: 'bg-orange-500/10 text-orange-500',

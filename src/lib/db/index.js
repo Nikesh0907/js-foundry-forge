@@ -1,14 +1,6 @@
-import Dexie, { Table } from 'dexie';
-import { Job, Candidate, Assessment, AssessmentResponse, TimelineEvent, Note } from '@/types';
+import Dexie from 'dexie';
 
 export class TalentFlowDB extends Dexie {
-  jobs!: Table<Job>;
-  candidates!: Table<Candidate>;
-  assessments!: Table<Assessment>;
-  assessmentResponses!: Table<AssessmentResponse>;
-  timelineEvents!: Table<TimelineEvent>;
-  notes!: Table<Note>;
-
   constructor() {
     super('TalentFlowDB');
     
