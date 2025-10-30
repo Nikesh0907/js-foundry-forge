@@ -41,7 +41,6 @@ function generateSlug(title) {
 }
 
 export async function seedDatabase() {
-  // Check if already seeded
   const existingJobs = await db.jobs.count();
   if (existingJobs > 0) {
     console.log('Database already seeded');

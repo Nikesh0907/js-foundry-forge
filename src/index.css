@@ -18,46 +18,46 @@ All colors MUST be HSL.
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
 
-    /* Primary: Modern Indigo for professional tech feel */
-    --primary: 243 75% 59%;
+    /* Primary (from #1C75BC) */
+    --primary: 207 74% 42%;
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 243 75% 54%;
+    --primary-hover: 207 74% 38%;
     
-    /* Secondary: Soft purple accent */
-    --secondary: 250 60% 96%;
-    --secondary-foreground: 243 75% 59%;
+    /* Secondary (from #4CAF50) */
+    --secondary: 122 39% 49%;
+    --secondary-foreground: 0 0% 100%;
 
-    /* Muted backgrounds */
-    --muted: 240 5% 96%;
-    --muted-foreground: 240 4% 46%;
+    /* Muted (from #E0E0E0) */
+    --muted: 0 0% 88%;
+    --muted-foreground: 240 4% 35%;
 
-    /* Accent: Vibrant for CTAs */
-    --accent: 270 80% 65%;
+    /* Accent (from #009688) */
+    --accent: 174 100% 29%;
     --accent-foreground: 0 0% 100%;
 
     /* Status colors */
-    --success: 142 71% 45%;
+    --success: 123 46% 34%; /* from #2E7D32 */
     --success-foreground: 0 0% 100%;
     
-    --warning: 38 92% 50%;
+    --warning: 45 100% 51%; /* from #FFC107 */
     --warning-foreground: 0 0% 100%;
     
-    --destructive: 0 84% 60%;
+    --destructive: 0 65% 51%; /* from #D32F2F */
     --destructive-foreground: 0 0% 100%;
     
-    --info: 199 89% 48%;
+    --info: 207 74% 42%; /* align info to primary */
     --info-foreground: 0 0% 100%;
 
     /* Borders and inputs */
     --border: 240 6% 90%;
     --input: 240 6% 90%;
-    --ring: 243 75% 59%;
+    --ring: 207 74% 42%;
 
     --radius: 0.75rem;
     
     /* Gradients */
-    --gradient-primary: linear-gradient(135deg, hsl(243 75% 59%) 0%, hsl(270 80% 65%) 100%);
-    --gradient-success: linear-gradient(135deg, hsl(142 71% 45%) 0%, hsl(142 71% 55%) 100%);
+    --gradient-primary: linear-gradient(135deg, hsl(207 74% 42%) 0%, hsl(174 100% 29%) 100%);
+    --gradient-success: linear-gradient(135deg, hsl(123 46% 34%) 0%, hsl(122 39% 49%) 100%);
     
     /* Shadows */
     --shadow-sm: 0 1px 2px 0 hsl(222 47% 11% / 0.05);
@@ -98,27 +98,27 @@ All colors MUST be HSL.
     --popover: 222 40% 13%;
     --popover-foreground: 0 0% 98%;
 
-    --primary: 243 75% 59%;
+    --primary: 207 74% 52%;
     --primary-foreground: 0 0% 100%;
-    --primary-hover: 243 75% 64%;
+    --primary-hover: 207 74% 48%;
 
-    --secondary: 240 4% 16%;
-    --secondary-foreground: 0 0% 98%;
+    --secondary: 122 25% 20%;
+    --secondary-foreground: 0 0% 100%;
 
-    --muted: 240 4% 16%;
-    --muted-foreground: 240 5% 65%;
+    --muted: 0 0% 20%;
+    --muted-foreground: 0 0% 70%;
 
-    --accent: 270 80% 65%;
+    --accent: 174 70% 30%;
     --accent-foreground: 0 0% 100%;
 
-    --success: 142 71% 45%;
-    --warning: 38 92% 50%;
-    --destructive: 0 84% 60%;
-    --info: 199 89% 48%;
+    --success: 123 46% 34%;
+    --warning: 45 100% 51%;
+    --destructive: 0 65% 51%;
+    --info: 207 74% 52%;
 
     --border: 240 4% 20%;
     --input: 240 4% 20%;
-    --ring: 243 75% 59%;
+    --ring: 207 74% 52%;
     --sidebar-background: 240 5.9% 10%;
     --sidebar-foreground: 240 4.8% 95.9%;
     --sidebar-primary: 224.3 76.3% 48%;

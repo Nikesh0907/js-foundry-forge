@@ -11,11 +11,14 @@ export default function CandidateDetail() {
   const navigate = useNavigate();
   const [candidate, setCandidate] = useState(null);
   const [timeline, setTimeline] = useState([]);
+  const [notes, setNotes] = useState([]);
+  const [noteText, setNoteText] = useState('');
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     loadCandidate();
     loadTimeline();
+    loadNotes();
   }, [id]);
 
   async function loadCandidate() {
@@ -35,31 +38,36 @@ export default function CandidateDetail() {
 
   async function loadTimeline() {
     try {
-      // Simulate timeline data from candidate history
-      const timelineData = [
-        {
-          id: 1,
-          action: 'Applied',
-          date: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000),
-          description: 'Candidate submitted application for this role'
-        },
-        {
-          id: 2,
-          action: 'Screened',
-          date: new Date(Date.now() - 25 * 24 * 60 * 60 * 1000),
-          description: 'Application reviewed and passed initial screening'
-        },
-        {
-          id: 3,
-          action: 'Technical Interview',
-          date: new Date(Date.now() - 15 * 24 * 60 * 60 * 1000),
-          description: 'Completed technical assessment with score: 85%'
-        }
-      ];
-      setTimeline(timelineData);
+      const events = await db.timelineEvents.where('candidateId').equals(id).toArray();
+      events.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+      setTimeline(events);
     } catch (error) {
       console.error('Failed to load timeline:', error);
     }
+  }
+
+  async function loadNotes() {
+    try {
+      const list = await db.notes.where('candidateId').equals(id).toArray();
+      list.sort((a, b) => (a.createdAt < b.createdAt ? 1 : -1));
+      setNotes(list);
+    } catch (e) {
+      console.error('Failed to load notes', e);
+    }
+  }
+
+  async function addNote() {
+    const text = noteText.trim();
+    if (!text) return;
+    const note = {
+      id: `note-${crypto.randomUUID()}`,
+      candidateId: id,
+      createdAt: new Date().toISOString(),
+      text,
+    };
+    await db.notes.add(note);
+    setNotes((prev) => [note, ...prev]);
+    setNoteText('');
   }
 
   const getStageColor = (stage) => {
@@ -141,25 +149,29 @@ export default function CandidateDetail() {
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {timeline.map((event, index) => (
-                  <div key={event.id} className="flex gap-4">
-                    <div className="flex flex-col items-center">
-                      <div className={`h-2 w-2 rounded-full ${getStageColor(event.action.toLowerCase())}`} />
-                      {index < timeline.length - 1 && (
-                        <div className="h-full w-0.5 bg-border mt-1" />
-                      )}
-                    </div>
-                    <div className="flex-1 pb-6">
-                      <div className="flex items-center gap-2 mb-1">
-                        <h4 className="text-sm font-semibold capitalize">{event.action}</h4>
-                        <span className="text-xs text-muted-foreground">
-                          {event.date.toLocaleDateString()}
-                        </span>
+                {timeline.length === 0 ? (
+                  <div className="text-sm text-muted-foreground">No timeline events yet</div>
+                ) : (
+                  timeline.map((event, index) => (
+                    <div key={event.id} className="flex gap-4">
+                      <div className="flex flex-col items-center">
+                        <div className={`h-2 w-2 rounded-full ${getStageColor((event.to || event.type || '').toLowerCase())}`} />
+                        {index < timeline.length - 1 && (
+                          <div className="h-full w-0.5 bg-border mt-1" />
+                        )}
                       </div>
-                      <p className="text-sm text-muted-foreground">{event.description}</p>
+                      <div className="flex-1 pb-6">
+                        <div className="flex items-center gap-2 mb-1">
+                          <h4 className="text-sm font-semibold capitalize">{event.type?.replace('_', ' ') || 'event'}</h4>
+                          <span className="text-xs text-muted-foreground">
+                            {new Date(event.createdAt).toLocaleString()}
+                          </span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">{event.description || ''}</p>
+                      </div>
                     </div>
-                  </div>
-                ))}
+                  ))
+                )}
               </div>
             </CardContent>
           </Card>
@@ -196,18 +208,33 @@ export default function CandidateDetail() {
 
           <Card className="mt-4">
             <CardHeader>
-              <CardTitle className="text-lg">Actions</CardTitle>
+              <CardTitle className="text-lg">Notes</CardTitle>
             </CardHeader>
-            <CardContent className="space-y-2">
-              <Button variant="outline" className="w-full" size="sm">
-                Move to Next Stage
-              </Button>
-              <Button variant="outline" className="w-full" size="sm">
-                Schedule Interview
-              </Button>
-              <Button variant="destructive" className="w-full" size="sm">
-                Reject Candidate
-              </Button>
+            <CardContent className="space-y-3">
+              <textarea
+                value={noteText}
+                onChange={(e) => setNoteText(e.target.value)}
+                placeholder="Add a note. Use @name to mention."
+                className="w-full rounded-md border bg-background p-2 text-sm"
+                rows={3}
+              />
+              <Button size="sm" className="w-full" onClick={addNote}>Add Note</Button>
+              <div className="space-y-3">
+                {notes.map((n) => (
+                  <div key={n.id} className="rounded-md border p-2 text-sm">
+                    <div className="text-xs text-muted-foreground mb-1">{new Date(n.createdAt).toLocaleString()}</div>
+                    <div>
+                      {n.text.split(/(@\w+)/g).map((part, idx) => (
+                        part.startsWith('@') ? (
+                          <span key={idx} className="text-primary font-medium">{part}</span>
+                        ) : (
+                          <span key={idx}>{part}</span>
+                        )
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
             </CardContent>
           </Card>
         </div>
