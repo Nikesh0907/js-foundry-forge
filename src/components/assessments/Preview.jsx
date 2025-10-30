@@ -5,7 +5,13 @@ import { Textarea } from '@/components/ui/textarea';
 
 function shouldShow(question, currentValues) {
   if (!question.showIf) return true;
-  return currentValues[question.showIf.questionId] === question.showIf.equals;
+  const parentVal = currentValues[question.showIf.questionId];
+  const target = question.showIf.equals;
+  if (Array.isArray(parentVal)) {
+    if (target == null || target === '') return parentVal.length > 0;
+    return parentVal.includes(target);
+  }
+  return parentVal === target;
 }
 
 export function AssessmentPreview({ assessment, values, onChange }) {
@@ -16,27 +22,30 @@ export function AssessmentPreview({ assessment, values, onChange }) {
           <CardTitle className="text-base">Live Preview</CardTitle>
         </CardHeader>
         <CardContent className="space-y-6">
-          <div>
+          <div className="border-b pb-3">
             <div className="text-xl font-semibold">{assessment.title || 'Untitled assessment'}</div>
             {assessment.description && (
-              <div className="text-sm text-muted-foreground">{assessment.description}</div>
+              <div className="text-sm text-muted-foreground mt-1">{assessment.description}</div>
             )}
           </div>
 
-          {assessment.sections.map((s) => (
+          {assessment.sections.map((s, sIdx) => (
             <div key={s.id} className="space-y-3">
-              <div>
-                <div className="font-medium">{s.title}</div>
+              <div className="pt-2">
+                <div className="font-semibold text-base">Section {sIdx + 1}: {s.title || 'Untitled section'}</div>
                 {s.description && (
                   <div className="text-sm text-muted-foreground">{s.description}</div>
                 )}
               </div>
-              <div className="grid gap-3">
-                {s.questions.map((q) => (
+              <div className="grid gap-4">
+                {s.questions.map((q, qIdx) => (
                   shouldShow(q, values) && (
-                    <div key={q.id} className="space-y-1">
-                      <label className="text-sm font-medium">
-                        {q.title} {q.required && <span className="text-destructive">*</span>}
+                    <div key={q.id} className="space-y-2 border rounded-md p-3">
+                      <label className="text-sm font-medium flex items-start">
+                        <span className="mr-2 text-muted-foreground">{qIdx + 1}.</span>
+                        <span>
+                          {q.title} {q.required && <span className="text-destructive">*</span>}
+                        </span>
                       </label>
                       {q.type === 'short' && (
                         <Input
@@ -58,36 +67,42 @@ export function AssessmentPreview({ assessment, values, onChange }) {
                         />
                       )}
                       {q.type === 'single' && (
-                        <div className="flex flex-wrap gap-2">
+                        <div className="space-y-2">
                           {q.options.map((opt) => (
-                            <button
-                              key={opt}
-                              type="button"
-                              className={`rounded border px-3 py-1 text-sm ${values[q.id] === opt ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
-                              onClick={() => onChange({ ...values, [q.id]: opt })}
-                            >
-                              {opt}
-                            </button>
+                            <label key={opt} className="flex items-center gap-2 cursor-pointer">
+                              <input
+                                type="radio"
+                                name={q.id}
+                                value={opt}
+                                checked={values[q.id] === opt}
+                                onChange={() => onChange({ ...values, [q.id]: opt })}
+                                className="accent-primary"
+                              />
+                              <span>{opt}</span>
+                            </label>
                           ))}
                         </div>
                       )}
                       {q.type === 'multi' && (
-                        <div className="flex flex-wrap gap-2">
+                        <div className="space-y-2">
                           {q.options.map((opt) => {
                             const arr = Array.isArray(values[q.id]) ? values[q.id] : [];
                             const selected = arr.includes(opt);
                             return (
-                              <button
-                                key={opt}
-                                type="button"
-                                className={`rounded border px-3 py-1 text-sm ${selected ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
-                                onClick={() => {
-                                  const next = selected ? arr.filter((v) => v !== opt) : [...arr, opt];
-                                  onChange({ ...values, [q.id]: next });
-                                }}
-                              >
-                                {opt}
-                              </button>
+                              <label key={opt} className="flex items-center gap-2 cursor-pointer">
+                                <input
+                                  type="checkbox"
+                                  name={`${q.id}-${opt}`}
+                                  value={opt}
+                                  checked={selected}
+                                  onChange={() => {
+                                    const next = selected ? arr.filter((v) => v !== opt) : [...arr, opt];
+                                    onChange({ ...values, [q.id]: next });
+                                  }}
+                                  className="accent-primary"
+                                />
+                                <span>{opt}</span>
+                              </label>
                             );
                           })}
                         </div>

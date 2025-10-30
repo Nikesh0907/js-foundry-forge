@@ -6,7 +6,13 @@ import { Textarea } from '@/components/ui/textarea';
 
 function shouldShow(question, values) {
   if (!question.showIf) return true;
-  return values[question.showIf.questionId] === question.showIf.equals;
+  const parentVal = values[question.showIf.questionId];
+  const target = question.showIf.equals;
+  if (Array.isArray(parentVal)) {
+    if (target == null || target === '') return parentVal.length > 0;
+    return parentVal.includes(target);
+  }
+  return parentVal === target;
 }
 
 function validate(assessment, values) {
@@ -70,36 +76,42 @@ export function RuntimeForm({ assessment, onSubmit }) {
                     />
                   )}
                   {q.type === 'single' && (
-                    <div className="flex flex-wrap gap-2">
+                    <div className="space-y-2">
                       {q.options.map((opt) => (
-                        <button
-                          key={opt}
-                          type="button"
-                          className={`rounded border px-3 py-1 text-sm ${values[q.id] === opt ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
-                          onClick={() => setValues({ ...values, [q.id]: opt })}
-                        >
-                          {opt}
-                        </button>
+                        <label key={opt} className="flex items-center gap-2 cursor-pointer">
+                          <input
+                            type="radio"
+                            name={q.id}
+                            value={opt}
+                            checked={values[q.id] === opt}
+                            onChange={() => setValues({ ...values, [q.id]: opt })}
+                            className="accent-primary"
+                          />
+                          <span>{opt}</span>
+                        </label>
                       ))}
                     </div>
                   )}
                   {q.type === 'multi' && (
-                    <div className="flex flex-wrap gap-2">
+                    <div className="space-y-2">
                       {q.options.map((opt) => {
                         const arr = Array.isArray(values[q.id]) ? values[q.id] : [];
                         const selected = arr.includes(opt);
                         return (
-                          <button
-                            key={opt}
-                            type="button"
-                            className={`rounded border px-3 py-1 text-sm ${selected ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'}`}
-                            onClick={() => {
-                              const next = selected ? arr.filter((v) => v !== opt) : [...arr, opt];
-                              setValues({ ...values, [q.id]: next });
-                            }}
-                          >
-                            {opt}
-                          </button>
+                          <label key={opt} className="flex items-center gap-2 cursor-pointer">
+                            <input
+                              type="checkbox"
+                              name={`${q.id}-${opt}`}
+                              value={opt}
+                              checked={selected}
+                              onChange={() => {
+                                const next = selected ? arr.filter((v) => v !== opt) : [...arr, opt];
+                                setValues({ ...values, [q.id]: next });
+                              }}
+                              className="accent-primary"
+                            />
+                            <span>{opt}</span>
+                          </label>
                         );
                       })}
                     </div>

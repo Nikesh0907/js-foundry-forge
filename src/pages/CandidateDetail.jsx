@@ -143,7 +143,7 @@ export default function CandidateDetail() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="mt-4">
             <CardHeader>
               <CardTitle>Timeline</CardTitle>
             </CardHeader>

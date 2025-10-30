@@ -9,6 +9,8 @@ import { db } from '@/lib/db';
 import { AssessmentBuilder } from '@/components/assessments/Builder';
 import { AssessmentPreview } from '@/components/assessments/Preview';
 import { RuntimeForm } from '@/components/assessments/RuntimeForm';
+import { toast } from "@/components/ui/use-toast";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 
 export default function Assessments() {
   const navigate = useNavigate();
@@ -18,6 +20,24 @@ export default function Assessments() {
   const [activeId, setActiveId] = useState(null);
   const [builder, setBuilder] = useState(null);
   const [previewValues, setPreviewValues] = useState({});
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [toDeleteId, setToDeleteId] = useState(null);
+  const [confirmResetOpen, setConfirmResetOpen] = useState(false);
+
+  const handleResetConfirm = async () => {
+    setPreviewValues({});
+    if (builder) {
+      const now = new Date().toISOString();
+      const cleared = { ...builder, title: 'Untitled Assessment', description: '', sections: [], updatedAt: now };
+      await db.assessments.put(cleared);
+      setBuilder(cleared);
+      setAssessments((prev) => {
+        const others = prev.filter((x) => x.id !== cleared.id);
+        return [...others, cleared];
+      });
+    }
+    setConfirmResetOpen(false);
+  };
 
   useEffect(() => {
     async function load() {
@@ -28,6 +48,13 @@ export default function Assessments() {
     }
     load();
   }, []);
+
+  // Close builder and clear preview when switching job
+  useEffect(() => {
+    setActiveId(null);
+    setBuilder(null);
+    setPreviewValues({});
+  }, [selectedJobId]);
 
   const startNew = () => {
     const now = new Date().toISOString();
@@ -42,6 +69,10 @@ export default function Assessments() {
     };
     setBuilder(draft);
     setActiveId(draft.id);
+    toast({
+      title: 'Assessment Draft Created',
+      description: 'A new assessment draft was started.'
+    });
   };
 
   const saveAssessment = async () => {
@@ -52,6 +83,21 @@ export default function Assessments() {
       const others = prev.filter((x) => x.id !== builder.id);
       return [...others, builder];
     });
+    toast({
+      title: 'Assessment Saved',
+      description: 'Assessment was successfully saved.'
+    });
+  };
+
+  const deleteAssessment = async (assessmentId) => {
+    await db.assessments.delete(assessmentId);
+    setAssessments((prev) => prev.filter((a) => a.id !== assessmentId));
+    if (activeId === assessmentId) {
+      setActiveId(null);
+      setBuilder(null);
+      setPreviewValues({});
+    }
+    toast({ title: 'Assessment Deleted', description: 'The assessment was removed.' });
   };
 
   const submitRuntime = async (values) => {
@@ -65,6 +111,7 @@ export default function Assessments() {
       createdAt: now,
     };
     await db.assessmentResponses.add(resp);
+    toast({ title: 'Submission Received', description: 'Your assessment response was saved.' });
   };
 
   const filtered = assessments.filter((a) => (selectedJobId ? a.jobId === selectedJobId : true));
@@ -78,7 +125,7 @@ export default function Assessments() {
         </div>
         <div className="flex items-center gap-3">
           <Select value={selectedJobId} onValueChange={setSelectedJobId}>
-            <SelectTrigger className="w-56">
+            <SelectTrigger className="w-56 bg-background">
               <SelectValue placeholder="Select job" />
             </SelectTrigger>
             <SelectContent>
@@ -106,16 +153,21 @@ export default function Assessments() {
             filtered
               .sort((a, b) => (a.updatedAt > b.updatedAt ? -1 : 1))
               .map((a) => (
-                <Card key={a.id} className={a.id === activeId ? 'ring-2 ring-primary' : ''}>
+                <Card key={a.id}>
                   <CardContent className="p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <div className="font-medium">{a.title}</div>
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <div className="font-medium truncate">{a.title}</div>
                         <div className="text-xs text-muted-foreground">Updated {new Date(a.updatedAt).toLocaleString()}</div>
                       </div>
-                      <Button size="sm" variant="outline" onClick={() => { setActiveId(a.id); setBuilder(a); }}>
-                        Edit
-                      </Button>
+                      <div className="flex items-center gap-2">
+                        <Button size="sm" variant="outline" onClick={() => { setActiveId(a.id); setBuilder(a); }}>
+                          Edit
+                        </Button>
+                        <Button size="sm" variant="outline" className="text-destructive border-destructive" onClick={() => { setToDeleteId(a.id); setConfirmOpen(true); }}>
+                          Delete
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -137,8 +189,8 @@ export default function Assessments() {
           <div className="flex items-center justify-between">
             <div className="font-medium">Preview</div>
             <div className="flex items-center gap-2">
-              <Button variant="outline" onClick={() => setPreviewValues({})}>Reset</Button>
-              <Button onClick={saveAssessment}>
+              <Button variant="outline" onClick={() => setConfirmResetOpen(true)}>Reset</Button>
+              <Button onClick={saveAssessment} disabled={!builder}>
                 <Save className="mr-2 h-4 w-4" /> Save
               </Button>
             </div>
@@ -152,6 +204,46 @@ export default function Assessments() {
           )}
         </div>
       </div>
+      <Dialog open={confirmOpen} onOpenChange={setConfirmOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete assessment?</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 text-sm text-muted-foreground">
+            <p>This will permanently remove the assessment. This action cannot be undone.</p>
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => setConfirmOpen(false)}>Cancel</Button>
+            <Button
+              className="bg-destructive text-destructive-foreground"
+              onClick={async () => {
+                if (toDeleteId) {
+                  await deleteAssessment(toDeleteId);
+                  setToDeleteId(null);
+                }
+                setConfirmOpen(false);
+              }}
+            >
+              Delete
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={confirmResetOpen} onOpenChange={setConfirmResetOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Reset assessment?</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-3 text-sm text-muted-foreground">
+            <p>This will clear the current draft (title, description, all sections and questions). This cannot be undone.</p>
+          </div>
+          <div className="flex justify-end gap-2 pt-2">
+            <Button variant="outline" onClick={() => setConfirmResetOpen(false)}>Cancel</Button>
+            <Button onClick={handleResetConfirm}>Confirm Reset</Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

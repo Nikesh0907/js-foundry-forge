@@ -3,6 +3,7 @@ import { db } from '@/lib/db';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
+import { toast } from "@/components/ui/use-toast";
 
 const STAGES = ['applied', 'screen', 'tech', 'offer', 'hired', 'rejected'];
 
@@ -50,6 +51,10 @@ export default function CandidatesBoard() {
       description: `Moved from ${prevStage} to ${toStage}`,
     });
     setCandidates((prev) => prev.map((x) => (x.id === id ? { ...x, stage: toStage } : x)));
+    toast({
+      title: 'Candidate Moved',
+      description: `${c.name || 'Candidate'} moved from ${prevStage} to ${toStage}`,
+    });
   }
 
   const handleDrop = (e, stage) => {

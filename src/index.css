@@ -2,33 +2,21 @@
 @tailwind components;
 @tailwind utilities;
 
-/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
-All colors MUST be HSL.
-*/
-
+/* Minimal but professional color palette for TalentFlow */
 @layer base {
   :root {
-    /* TalentFlow Design System - Professional Hiring Platform */
     --background: 0 0% 100%;
     --foreground: 222 47% 11%;
-
     --card: 0 0% 100%;
     --card-foreground: 222 47% 11%;
-
     --popover: 0 0% 100%;
     --popover-foreground: 222 47% 11%;
-
-    /* Primary (from #1C75BC) */
     --primary: 207 74% 42%;
     --primary-foreground: 0 0% 100%;
     --primary-hover: 207 74% 38%;
-    
-    /* Secondary (from #4CAF50) */
     --secondary: 122 39% 49%;
     --secondary-foreground: 0 0% 100%;
-
-    /* Muted (from #E0E0E0) */
-    --muted: 0 0% 88%;
+    --muted: 0 0% 96%;
     --muted-foreground: 240 4% 35%;
 
     /* Accent (from #009688) */
@@ -114,19 +102,10 @@ All colors MUST be HSL.
     --success: 123 46% 34%;
     --warning: 45 100% 51%;
     --destructive: 0 65% 51%;
-    --info: 207 74% 52%;
-
-    --border: 240 4% 20%;
-    --input: 240 4% 20%;
-    --ring: 207 74% 52%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --border: 240 6% 90%;
+    --input: 240 6% 90%;
+    --ring: 207 74% 42%;
+    --radius: 0.5rem;
   }
 }
 
@@ -134,7 +113,6 @@ All colors MUST be HSL.
   * {
     @apply border-border;
   }
-
   body {
     @apply bg-background text-foreground;
   }

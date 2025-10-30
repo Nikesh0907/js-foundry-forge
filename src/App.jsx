@@ -1,6 +1,5 @@
 import { useEffect, useState } from 'react';
 import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
@@ -8,7 +7,6 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { ProtectedRoute } from "./components/ProtectedRoute";
 import { PublicRoute } from "./components/PublicRoute";
 import { AppLayout } from "./components/layout/AppLayout";
-import GetStarted from "./pages/GetStarted";
 import Login from "./pages/Login";
 import Dashboard from "./pages/Dashboard";
 import Jobs from "./pages/Jobs";
@@ -61,7 +59,6 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <Toaster />
-        <Sonner />
         {!initialized ? (
           <div className="flex min-h-screen items-center justify-center">
             <div className="flex flex-col items-center gap-4">
@@ -78,14 +75,6 @@ const App = () => {
             <BrowserRouter>
               <Routes>
                 {/* Public routes */}
-                <Route 
-                  path="/get-started" 
-                  element={
-                    <PublicRoute>
-                      <GetStarted />
-                    </PublicRoute>
-                  } 
-                />
                 <Route 
                   path="/login" 
                   element={
@@ -111,7 +100,7 @@ const App = () => {
                 </Route>
                 
                 {/* Default redirects */}
-                <Route path="/" element={<Navigate to="/get-started" replace />} />
+                <Route path="/" element={<Navigate to="/dashboard" replace />} />
                 
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />

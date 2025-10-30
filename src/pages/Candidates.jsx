@@ -13,13 +13,12 @@ export default function Candidates() {
   const [candidates, setCandidates] = useState([]);
   const [search, setSearch] = useState('');
   const [stage, setStage] = useState('all');
-  const containerRef = useRef(null);
-  const [scrollTop, setScrollTop] = useState(0);
-  const rowHeight = 84; // approx card height
-  const viewportHeight = 600;
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(25);
 
   useEffect(() => {
     loadCandidates();
+    setPage(1);
   }, [search, stage]);
 
   async function loadCandidates() {
@@ -35,13 +34,11 @@ export default function Candidates() {
     }
     setCandidates(results);
   }
-
-  const total = candidates.length;
-  const startIndex = Math.max(0, Math.floor(scrollTop / rowHeight) - 5);
-  const endIndex = Math.min(total, Math.ceil((scrollTop + viewportHeight) / rowHeight) + 5);
-  const visible = candidates.slice(startIndex, endIndex);
-  const paddingTop = startIndex * rowHeight;
-  const paddingBottom = Math.max(0, (total - endIndex) * rowHeight);
+  const totalPages = Math.max(1, Math.ceil(candidates.length / pageSize));
+  const pageCandidates = useMemo(
+    () => candidates.slice((page - 1) * pageSize, page * pageSize),
+    [candidates, page, pageSize]
+  );
 
   const getStageColor = (stage) => {
     const colors = {
@@ -106,14 +103,8 @@ export default function Candidates() {
               <p className="text-muted-foreground">No candidates found</p>
             </div>
           ) : (
-            <div
-              ref={containerRef}
-              onScroll={(e) => setScrollTop(e.currentTarget.scrollTop)}
-              className="relative max-h-[70vh] overflow-auto"
-              style={{ minHeight: `${Math.min(viewportHeight, total * rowHeight)}px` }}
-            >
-              <div style={{ paddingTop: `${paddingTop}px`, paddingBottom: `${paddingBottom}px` }} className="grid gap-3">
-              {visible.map((candidate) => (
+            <div className="grid gap-3">
+              {pageCandidates.map((candidate) => (
                 <Card 
                   key={candidate.id} 
                   className="hover:shadow-md transition-shadow cursor-pointer"
@@ -150,6 +141,23 @@ export default function Candidates() {
                   </CardContent>
                 </Card>
               ))}
+              <div className="flex items-center justify-between pt-2">
+                <div className="text-sm text-muted-foreground">Page {page} of {totalPages}</div>
+                <div className="flex items-center gap-2">
+                  <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}>
+                    <SelectTrigger className="w-28">
+                      <SelectValue placeholder="Page size" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="10">10 / page</SelectItem>
+                      <SelectItem value="25">25 / page</SelectItem>
+                      <SelectItem value="50">50 / page</SelectItem>
+                      <SelectItem value="100">100 / page</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(p => Math.max(1, p - 1))}>Prev</Button>
+                  <Button variant="outline" size="sm" disabled={page === totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))}>Next</Button>
+                </div>
               </div>
             </div>
           )}

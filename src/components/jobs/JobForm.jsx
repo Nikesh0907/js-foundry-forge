@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { db } from '@/lib/db';
+import { toast } from "@/components/ui/use-toast";
 
 function slugify(title) {
   return title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
@@ -40,11 +41,13 @@ export default function JobForm({ open, onOpenChange, initialJob, onSaved }) {
     setError('');
     if (!title.trim()) {
       setError('Title is required');
+      toast({ title: 'Error', description: 'Title is required', variant: 'destructive' });
       return;
     }
     const s = slug || slugify(title);
     if (!s) {
       setError('Slug is required');
+      toast({ title: 'Error', description: 'Slug is required', variant: 'destructive' });
       return;
     }
     setSaving(true);
@@ -54,6 +57,7 @@ export default function JobForm({ open, onOpenChange, initialJob, onSaved }) {
       const conflict = existing.find(j => j.id !== initialJob?.id);
       if (conflict) {
         setError('Slug must be unique');
+        toast({ title: 'Error', description: 'Slug must be unique', variant: 'destructive' });
         return;
       }
 
@@ -63,6 +67,7 @@ export default function JobForm({ open, onOpenChange, initialJob, onSaved }) {
         const updated = { ...job, title, slug: s, status, tags: parsedTags, description, updatedAt: now };
         await db.jobs.put(updated);
         onSaved?.(updated);
+        toast({ title: 'Job Updated', description: 'Job was updated successfully.' });
       } else {
         const count = await db.jobs.count();
         const created = {
@@ -78,8 +83,12 @@ export default function JobForm({ open, onOpenChange, initialJob, onSaved }) {
         };
         await db.jobs.add(created);
         onSaved?.(created);
+        toast({ title: 'Job Created', description: 'Job was created successfully.' });
       }
       onOpenChange(false);
+    } catch (e) {
+      toast({ title: 'Error', description: 'Something went wrong saving the job', variant: 'destructive' });
+      throw e;
     } finally {
       setSaving(false);
     }

@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Plus, Search, Archive, Briefcase } from 'lucide-react';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import JobForm from '@/components/jobs/JobForm';
 
 export default function Jobs() {
@@ -15,7 +16,7 @@ export default function Jobs() {
   const [statusFilter, setStatusFilter] = useState('all');
   const [tagsFilter, setTagsFilter] = useState('');
   const [page, setPage] = useState(1);
-  const pageSize = 10;
+  const [pageSize, setPageSize] = useState(10);
   const [modalOpen, setModalOpen] = useState(false);
   const [editing, setEditing] = useState(null);
   const [draggingId, setDraggingId] = useState(null);
@@ -48,7 +49,7 @@ export default function Jobs() {
   }
 
   const totalPages = Math.max(1, Math.ceil(jobs.length / pageSize));
-  const pageJobs = useMemo(() => jobs.slice((page - 1) * pageSize, page * pageSize), [jobs, page]);
+  const pageJobs = useMemo(() => jobs.slice((page - 1) * pageSize, page * pageSize), [jobs, page, pageSize]);
 
   function openCreate() { setEditing(null); setModalOpen(true); }
   function openEdit(job) { setEditing(job); setModalOpen(true); }
@@ -174,9 +175,24 @@ export default function Jobs() {
             ))
           )}
           <div className="flex items-center justify-between pt-2">
-            <div className="text-sm text-muted-foreground">Page {page} of {totalPages}</div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(p => Math.max(1, p - 1))}>Prev</Button>
+            <div className="flex items-center gap-2">
+              <div className="text-sm text-muted-foreground">Page {page} of {totalPages}</div>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2">
+                <Select value={String(pageSize)} onValueChange={(v) => { setPageSize(Number(v)); setPage(1); }}>
+                <SelectTrigger className="w-28">
+                      <SelectValue placeholder="Page size" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="10">10 / page</SelectItem>
+                      <SelectItem value="20">25 / page</SelectItem>
+                      <SelectItem value="50">50 / page</SelectItem>
+                      <SelectItem value="100">100 / page</SelectItem>
+                    </SelectContent>
+                </Select>
+                <Button variant="outline" size="sm" disabled={page === 1} onClick={() => setPage(p => Math.max(1, p - 1))}>Prev</Button>
+              </div>
               <Button variant="outline" size="sm" disabled={page === totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))}>Next</Button>
             </div>
           </div>

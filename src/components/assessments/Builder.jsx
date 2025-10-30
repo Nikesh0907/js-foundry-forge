@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -16,6 +17,38 @@ const QUESTION_TYPES = [
 ];
 
 export function AssessmentBuilder({ assessment, onChange }) {
+  const [draggingQuestionId, setDraggingQuestionId] = useState(null);
+  const [draggingSectionId, setDraggingSectionId] = useState(null);
+
+  const onQuestionDragStart = (e, sectionId, questionId) => {
+    setDraggingQuestionId(questionId);
+    setDraggingSectionId(sectionId);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', questionId);
+  };
+
+  const onQuestionDragOver = (e, sectionId, overQuestionId) => {
+    e.preventDefault();
+    if (!draggingQuestionId || draggingSectionId !== sectionId || draggingQuestionId === overQuestionId) return;
+    const next = { ...assessment };
+    const secIdx = next.sections.findIndex((s) => s.id === sectionId);
+    if (secIdx === -1) return;
+    const questions = [...next.sections[secIdx].questions];
+    const from = questions.findIndex((q) => q.id === draggingQuestionId);
+    const to = questions.findIndex((q) => q.id === overQuestionId);
+    if (from === -1 || to === -1) return;
+    const [moved] = questions.splice(from, 1);
+    questions.splice(to, 0, moved);
+    next.sections[secIdx] = { ...next.sections[secIdx], questions };
+    next.updatedAt = new Date().toISOString();
+    onChange(next);
+  };
+
+  const onQuestionDrop = () => {
+    setDraggingQuestionId(null);
+    setDraggingSectionId(null);
+  };
+
   const addSection = () => {
     const next = {
       ...assessment,
@@ -149,7 +182,14 @@ export function AssessmentBuilder({ assessment, onChange }) {
 
             <div className="space-y-3">
               {section.questions.map((q) => (
-                <div key={q.id} className="rounded-lg border p-3">
+                <div
+                  key={q.id}
+                  className="rounded-lg border p-3"
+                  draggable
+                  onDragStart={(e) => onQuestionDragStart(e, section.id, q.id)}
+                  onDragOver={(e) => onQuestionDragOver(e, section.id, q.id)}
+                  onDrop={onQuestionDrop}
+                >
                   <div className="flex items-start gap-2">
                     <GripVertical className="mt-2 h-4 w-4 text-muted-foreground" />
                     <div className="flex-1 space-y-2">
@@ -179,18 +219,48 @@ export function AssessmentBuilder({ assessment, onChange }) {
 
                       {(q.type === 'single' || q.type === 'multi') && (
                         <div className="space-y-2">
-                          <label className="text-sm font-medium">Options (comma separated)</label>
-                          <Input
-                            value={q.options.join(', ')}
-                            onChange={(e) =>
-                              updateQuestion(section.id, q.id, {
-                                options: e.target.value
-                                  .split(',')
-                                  .map((s) => s.trim())
-                                  .filter(Boolean),
-                              })
-                            }
-                          />
+                          <label className="text-sm font-medium">Options</label>
+                          <div className="space-y-2">
+                            {q.options.map((option, idx) => (
+                              <div key={idx} className="flex items-center gap-2">
+                                {q.type === 'single' ? (
+                                  <input type="radio" disabled className="accent-primary" />
+                                ) : (
+                                  <input type="checkbox" disabled className="accent-primary" />
+                                )}
+                                <Input
+                                  value={option}
+                                  onChange={(e) => {
+                                    const next = [...q.options];
+                                    next[idx] = e.target.value;
+                                    updateQuestion(section.id, q.id, { options: next });
+                                  }}
+                                  className="flex-1"
+                                  placeholder={`Option ${idx + 1}`}
+                                />
+                                <Button
+                                  type="button"
+                                  variant="ghost"
+                                  size="icon"
+                                  onClick={() => {
+                                    const next = q.options.filter((_, i) => i !== idx);
+                                    updateQuestion(section.id, q.id, { options: next.length ? next : [''] });
+                                  }}
+                                  aria-label="Remove option"
+                                >
+                                  <Trash2 className="h-4 w-4" />
+                                </Button>
+                              </div>
+                            ))}
+                            <Button
+                              type="button"
+                              variant="outline"
+                              size="sm"
+                              onClick={() => updateQuestion(section.id, q.id, { options: [...q.options, ""] })}
+                            >
+                              <Plus className="mr-2 h-4 w-4" /> Add option
+                            </Button>
+                          </div>
                         </div>
                       )}
 
@@ -244,17 +314,74 @@ export function AssessmentBuilder({ assessment, onChange }) {
                         </div>
                         <div className="space-y-2 sm:col-span-2">
                           <label className="text-sm font-medium">Conditional (Show if)</label>
-                          <Input
-                            placeholder="questionId=answer"
-                            value={q.showIf ? `${q.showIf.questionId}=${q.showIf.equals}` : ''}
-                            onChange={(e) => {
-                              const v = e.target.value;
-                              if (!v) return updateQuestion(section.id, q.id, { showIf: null });
-                              const [qid, ans] = v.split('=');
-                              updateQuestion(section.id, q.id, { showIf: { questionId: qid?.trim(), equals: (ans ?? '').trim() } });
-                            }}
-                          />
-                          <div className="text-xs text-muted-foreground">Example: q1=Yes</div>
+                          {/* Parent question selector (single-choice only) */}
+                          {(() => {
+                            const allQuestions = assessment.sections.flatMap((sec) =>
+                              sec.questions.map((qq) => ({ ...qq, sectionId: sec.id }))
+                            );
+                            const eligibleParents = allQuestions.filter((pq) => pq.id !== q.id && (pq.type === 'single' || pq.type === 'multi'));
+                            const selectedParent = eligibleParents.find((pq) => pq.id === q.showIf?.questionId) || null;
+                            return (
+                              <div className="grid gap-2 sm:grid-cols-2">
+                                <div>
+                                  <Select
+                                    value={q.showIf?.questionId || ''}
+                                    onValueChange={(val) => {
+                                      const nextParent = eligibleParents.find((pq) => pq.id === val) || null;
+                                      updateQuestion(section.id, q.id, {
+                                        showIf: nextParent ? { questionId: nextParent.id, equals: '' } : null,
+                                      });
+                                    }}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder={eligibleParents.length ? 'Select parent question' : 'No eligible parent'} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {eligibleParents.map((pq) => (
+                                        <SelectItem key={pq.id} value={pq.id}>
+                                          {pq.title.slice(0, 60)}{pq.title.length > 60 ? '…' : ''}
+                                        </SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                                <div>
+                                  <Select
+                                    value={q.showIf?.equals || ''}
+                                    onValueChange={(val) => {
+                                      if (!selectedParent) return;
+                                      updateQuestion(section.id, q.id, {
+                                        showIf: { questionId: selectedParent.id, equals: val },
+                                      });
+                                    }}
+                                    disabled={!selectedParent}
+                                  >
+                                    <SelectTrigger>
+                                      <SelectValue placeholder={selectedParent ? 'Select answer' : 'Choose parent first'} />
+                                    </SelectTrigger>
+                                    <SelectContent>
+                                      {(selectedParent?.options || []).map((opt) => (
+                                        <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                                      ))}
+                                    </SelectContent>
+                                  </Select>
+                                </div>
+                              </div>
+                            );
+                          })()}
+                          <div className="text-xs text-muted-foreground">Show this question only when the parent equals the selected answer.</div>
+                          {q.showIf && (
+                            <div className="pt-1">
+                              <Button
+                                type="button"
+                                variant="outline"
+                                size="sm"
+                                onClick={() => updateQuestion(section.id, q.id, { showIf: null })}
+                              >
+                                Clear condition
+                              </Button>
+                            </div>
+                          )}
                         </div>
                       </div>
                     </div>
